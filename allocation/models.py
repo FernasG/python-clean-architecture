@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Optional, Set, NamedTuple
+from typing import Optional, Set, NamedTuple, List
 from datetime import date
 from collections import namedtuple
 
@@ -27,6 +27,13 @@ class Batch:
 
     def __hash__(self):
         return hash(self.reference)
+    
+    def __gt__(self, other):
+        if self.eta is None:
+            return False
+        if other.eta is None:
+            return True
+        return self.eta > other.eta
 
     def allocate(self, line: OrderLine):
         if self.can_allocate(line):
@@ -62,3 +69,9 @@ class Person:
 
 Line = namedtuple('Line', ['sku', 'qty'])
 
+def allocate(line: OrderLine, batches: List[Batch]) -> str:
+    batch = next(
+        b for b in sorted(batches) if b.can_allocate(line)
+    )
+    batch.allocate(line)
+    return batch.reference
